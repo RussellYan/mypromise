@@ -16,7 +16,7 @@ describe('Promise', () => {
         assert.isFunction(promise.then)
     });
 
-    it('new Promise(fn) 中 fn 立刻执行', () => {
+    it('fn excutes immediately', () => {
         const fn = Sinon.fake();
         new MyPromise(fn);
         assert(fn.called);
@@ -47,4 +47,77 @@ describe('Promise', () => {
         });
         promise.then(null, fail);
     });
+
+    it('test init status', () => {
+        const promise = new MyPromise(() => {})
+        assert(promise.status === 'pending')
+    })
+
+    it('test resolve status', done => {
+        const promise = new MyPromise((resolve) => {
+          resolve();
+          setTimeout(() => {
+            assert(promise.status === 'fulfilled');
+            done();
+          })
+        })
+        promise.then(() => {}, () => {});
+    });
+
+    it('test reject status', done => {
+        const promise = new MyPromise((resolve, reject) => {
+          reject();
+          setTimeout(() => {
+            assert(promise.status === 'rejected');
+            done();
+          });
+        })
+        promise.then(() => {}, () => {});
+    });
+
+    it('onFulfilled onRejected 如果非函数跳过', () => {
+        const promise = new MyPromise((resolve, reject) => {
+          reject();
+        });
+        promise.then(false, null);
+    });
+
+    it('then 可以多次调用', done => {
+        const callbacks = [Sinon.fake(), Sinon.fake(), Sinon.fake()];
+        const promise = new MyPromise((resolve, reject) => {
+            resolve();
+        });
+        promise.then(callbacks[0]); // 多次使用.then()
+        promise.then(callbacks[1]);
+        promise.then(callbacks[2]);
+        setTimeout(() => {
+            assert.isTrue(callbacks[0].called); 
+            assert.isTrue(callbacks[0].calledBefore(callbacks[1])) // 确保调用顺序
+            assert.isTrue(callbacks[1].called);
+            assert.isTrue(callbacks[1].calledBefore(callbacks[2]))
+            assert.isTrue(callbacks[2].called);
+            done();
+        });
+    });
+
+    it('失败回调', done => {
+        const callbacks = [Sinon.fake(), Sinon.fake(), Sinon.fake()];
+        const promise = new MyPromise((resolve, reject) => {
+            reject();
+        });
+        promise.then(null, callbacks[0]);
+        promise.then(null, callbacks[1]);
+        promise.then(null, callbacks[2]);
+        setTimeout(() => {
+            assert.isTrue(callbacks[0].called); 
+            assert.isTrue(callbacks[0].calledBefore(callbacks[1]))
+            assert.isTrue(callbacks[1].called);
+            assert.isTrue(callbacks[1].calledBefore(callbacks[2]))
+            assert.isTrue(callbacks[2].called);
+            done();
+        });
+    });
+
+    
+
 })
