@@ -22,6 +22,10 @@ class MyPromise {
         this.onRejectedCallbacks = [];
         // resolve reject 写在constructor里避免this混乱
         const resolve = (value: any) => {
+            if (value instanceof MyPromise) {
+                value.then(resolve, reject);
+                return;
+            }
             if (this.status === promiseStates.PENDING) {
                 this.value = value;
                 this.status = promiseStates.RESOLVED;
@@ -50,7 +54,7 @@ class MyPromise {
     // 如果返回值是一个promise, 会采用这个promise的结果
     // catch的特点是如果都没有错误处理(一层层)没找到，会找最近的catch，catch也遵循then规则
     // .then.then并不是和jquery一样返回this, promise中实现链式调用主要靠返回一个新的promise
-    then(onFulfilled: any, onRejected: any): any {
+    then(onFulfilled: any, onRejected?: any): any {
         onFulfilled = (typeof onFulfilled === 'function') ? onFulfilled : (data:any) => data;
         onRejected = (typeof onRejected === 'function') ? onRejected : (err:any) => { throw err };
         // 为了实现链式调用，需要创建一个新的promise
@@ -111,6 +115,36 @@ class MyPromise {
         return nextPromise;
     }
 
+    catch(onRejected: any) {
+        this.then(null, onRejected);
+    }
+
+    static all(promises) {
+        return new MyPromise((resolve, reject) => {
+            const result = [];
+            let process = 0;
+            const length = promises.length;
+            const collectData = (value: any, index: number) => {
+                result[index] = value;
+                process++;
+                if (process === length) {
+                    resolve(result);
+                }
+            }
+            for (let i = 0; i < length; i++) {
+                const item = promises[i];
+                if (isPromise(item)) {
+                    item.then(y => {
+                        collectData(y, i);
+                    }, reject);
+                } else {
+                    collectData(item, i);
+                }
+
+            }
+        })
+    }
+
 }
 
 // 处理每一次then返回的新promise (参数x为上个promise的fulfill返回值)
@@ -122,38 +156,40 @@ function resolvePromise(nextPromise: MyPromise, x: any, resolve: Function, rejec
     };
     // called的作用：防止(某些promise库)onFulfilled和onRejected同时被调用
     let called = false;
-    const xType = typeof x;
-    if (x !== null && (xType === 'object' || xType === 'function')) {
+    if (isPromise(x)) {
         // 有可能是promise，promise要有then
-        try {
-            let then = x.then; // 有可能会报错，需要catch捕获err直接reject
-            // 如果是函数类型，认定x为promise
-            if (typeof then === 'function') {
-                // 只取一次 当前promise解析出来的结果可能还是一个promise
-                then.call(x, y => {
-                    if (called) return;
-                    called = true;
-                    // 递归处理返回值
-                    resolvePromise(nextPromise, y, resolve, reject);
-                }, r => {
-                    if (called) return;
-                    called = true;
-                    console.log(r);
-                    reject(r)
-                })
-            } else {
-                // 非promise类型直接resolve
-                resolve(x);
-            }
-        } catch (err) {
+        let then = x.then; // 有可能会报错，需要catch捕获err直接reject
+        // 只取一次 当前promise解析出来的结果可能还是一个promise
+        then.call(x, y => {
             if (called) return;
             called = true;
-            console.log(err);
-            reject(err);
-        }
+            // 递归处理返回值
+            resolvePromise(nextPromise, y, resolve, reject);
+        }, r => {
+            if (called) return;
+            called = true;
+            console.log(r);
+            reject(r)
+        })
     } else {
         resolve(x);
     }
 }
+
+function isPromise(x: any) {
+    const xType = typeof x;
+    if (x !== null && (xType === 'object' || xType === 'function')) {
+        try {
+            const then = x.then;
+            if (typeof then === 'function') {
+                return true;
+            }
+        } catch(err) {
+            console.log('not a promise: ', err);
+            return false;
+        }
+    }
+    return false;
+ }
 
 export default MyPromise;

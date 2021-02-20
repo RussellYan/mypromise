@@ -3,7 +3,7 @@ import MyPromise from './promise';
 const p = new MyPromise((resolve, reject) => {
   console.log('立刻执行:');
   // resolve(1);
-  reject(0);
+  resolve(234);
   // setTimeout(() => {
   //   throw new Error('抛出错误'); // setTimeout里的抛错无法捕获
   // }, 2000);
@@ -20,4 +20,10 @@ p.then((data) => {
   console.log('成功2：', data);
 }, (err) => {
   console.log('失败2：', err);
+});
+
+MyPromise.all([1,2, p]).then(data => {
+  console.log('result: ', data);
+}).catch(err => {
+  console.log('error: ', err);
 });
