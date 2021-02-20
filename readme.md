@@ -16,5 +16,5 @@
     return dfd;
   }
 ```
->在测试脚本的目录运行下面的命令：
+>3、在测试脚本的目录运行下面的命令：
 `promise-aplus-tests promise.js`;
