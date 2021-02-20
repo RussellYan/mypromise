@@ -1,10 +1,12 @@
 # 手写实现简版 promise
 
 [Promise规范参考](https://promisesaplus.com/)
->安装测试工具： npm install -g promise-aplus-tests
+>1、安装测试工具：
+`npm install -g promise-aplus-tests`
 
+>2、测试脚本例子：
 ```javascript
-// 测试脚本：
+  const Promise = require('./promise.js');
   Promise.defer = Promise.deferred = function() {
     let dfd = {};
     dfd.promise = new Promise((resolve, reject) => {
@@ -14,3 +16,5 @@
     return dfd;
   }
 ```
+>在测试脚本的目录运行下面的命令：
+`promise-aplus-tests promise.js`;

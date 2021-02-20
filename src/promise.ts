@@ -54,7 +54,7 @@ class MyPromise {
         onFulfilled = (typeof onFulfilled === 'function') ? onFulfilled : (data:any) => data;
         onRejected = (typeof onRejected === 'function') ? onRejected : (err:any) => { throw err };
         // 为了实现链式调用，需要创建一个新的promise
-        const nextPromise: Promise<Function> = new Promise((resolve, reject) => {
+        const nextPromise: MyPromise = new MyPromise((resolve, reject) => {
             if (this.status === promiseStates.RESOLVED) {
                 // 执行then中的方法，可能返回的是一个值或者是一个promise
                 // 需要判断返回值的类型，如果是promise，需要执行这个promise并采用它的状态作为promise的成功或失败
@@ -107,13 +107,14 @@ class MyPromise {
                     });
                 })
             }
-        })
+        });
+        return nextPromise;
     }
 
 }
 
 // 处理每一次then返回的新promise (参数x为上个promise的fulfill返回值)
-function resolvePromise(nextPromise: Promise<Function>, x: any, resolve: Function, reject: Function): void {
+function resolvePromise(nextPromise: MyPromise, x: any, resolve: Function, reject: Function): void {
     // 为了兼容所有的promise,n个库之间的执行流程是一样的，尽可能详细不出错
     // 1).不能引用同一个对象，防止造成死循环
     if (nextPromise === x) {
