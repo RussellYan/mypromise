@@ -13,18 +13,27 @@ Function.prototype.clone = function() {
   return eval(`${this.name}`);
 }
 
+// TODO
+// 判断对象的类型：RegExp, Date, Array, Object, Map, WeakMap, Set, WeakSet....
+function getObjType(value, type) {
+
+}
+
 /**
  * 相对完整的深拷贝
  * @param {*} target 拷贝的对象
  * @param {*} hash 用于存放对象的拷贝记录，可以处理一些循环引用
+ *  ====> 容易忽略的几个类型: Function, Map, WeakMap, Set, WeakSet
  */
 function deepClone(target, hash = new WeakMap()) { // dog sun的 ts-node报错说不支持WeakMap....， 以后再研究一下
-  // 基本数据类型, null, undefine
+  // 基本数据类型, null, undefine, symbol
   if ((typeof target !== 'object') || target == null) return target;
   // 拷贝正则对象
   if (target instanceof RegExp) return new RegExp(target);
   // 拷贝日期对象
   if (target instanceof Date) return new Date(target);
+  // 还有 Map, Set, WeakMap, WeakSet......  TODO.....
+  // 参考：https://blog.csdn.net/vipp666/article/details/83541319
   // 拷贝的target可能是数组或者对象，所以要用for in
   // 创建一个新的空数组或者空对象, 存放处理结果
   const instance = new target.constructor;
