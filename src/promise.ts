@@ -145,6 +145,23 @@ class MyPromise {
         })
     }
 
+    // ....TODO.....
+    static race(promises) {
+
+    }
+    
+    static resolve(callback: any) {
+
+    }
+
+    static reject(callback: Function) {
+
+    }
+
+    finally(callback: Function) {
+
+    }
+
 }
 
 // 处理每一次then返回的新promise (参数x为上个promise的fulfill返回值)
